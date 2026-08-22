@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Poppins } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,8 +12,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const poppins = Poppins({
+  variable: "--font-heading",
+  subsets: ["latin"],
+  weight: ["700", "800"],
+});
+
 export const metadata: Metadata = {
-  title: "My Gemini App",
+  title: "Ask Jay",
   description: "An elegant chat application powered by Gemini AI",
 };
 
@@ -21,7 +27,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${poppins.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
