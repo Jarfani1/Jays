@@ -3,9 +3,22 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
+interface GenerationConfigInput {
+  topK?: number;
+  topP?: number;
+  maxOutputTokens?: number;
+  frequencyPenalty?: number;
+  presencePenalty?: number;
+  stopSequence?: string;
+  seed?: string;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { messages } = await request.json();
+    const { messages, generationConfig } = (await request.json()) as {
+      messages: { role: string; content: string }[];
+      generationConfig?: GenerationConfigInput;
+    };
 
     const apiKey = process.env.GOOGLE_GENAI_API_KEY;
     if (!apiKey) {
@@ -25,9 +38,26 @@ export async function POST(request: NextRequest) {
       })
     );
 
+    const config = generationConfig
+      ? {
+          topK: generationConfig.topK,
+          topP: generationConfig.topP,
+          maxOutputTokens: generationConfig.maxOutputTokens,
+          frequencyPenalty: generationConfig.frequencyPenalty,
+          presencePenalty: generationConfig.presencePenalty,
+          ...(generationConfig.stopSequence
+            ? { stopSequences: [generationConfig.stopSequence] }
+            : {}),
+          ...(generationConfig.seed
+            ? { seed: Number(generationConfig.seed) }
+            : {}),
+        }
+      : undefined;
+
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents,
+      ...(config ? { config } : {}),
     });
 
     const text =

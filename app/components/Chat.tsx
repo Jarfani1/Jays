@@ -15,6 +15,7 @@ import {
   ThumbsDown,
   RefreshCw,
 } from "lucide-react";
+import ModelSettings, { DEFAULT_MODEL_SETTINGS, ModelSettingsState } from "./ModelSettings";
 
 interface Message {
   role: "user" | "assistant";
@@ -38,6 +39,8 @@ export default function Chat() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [regeneratingIdx, setRegeneratingIdx] = useState<number | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [modelSettings, setModelSettings] = useState<ModelSettingsState>(DEFAULT_MODEL_SETTINGS);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const currentConv = conversations.find((c) => c.id === currentConvId);
@@ -89,6 +92,7 @@ export default function Chat() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [...messages, userMessage],
+          generationConfig: modelSettings,
         }),
       });
 
@@ -176,7 +180,7 @@ export default function Chat() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({ messages: history, generationConfig: modelSettings }),
       });
 
       if (!response.ok) throw new Error("Failed to fetch response");
@@ -252,7 +256,10 @@ export default function Chat() {
             <HelpCircle size={18} />
             Help & FAQ
           </button>
-          <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-[#a9c1da] transition-colors hover:bg-white/8 hover:text-white">
+          <button
+            onClick={() => setSettingsOpen((prev) => !prev)}
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-[#a9c1da] transition-colors hover:bg-white/8 hover:text-white"
+          >
             <Settings size={18} />
             Settings
           </button>
@@ -279,6 +286,15 @@ export default function Chat() {
                 </h1>
               </div>
             </div>
+            <button
+              onClick={() => setSettingsOpen((prev) => !prev)}
+              aria-label="Toggle model settings"
+              className={`rounded-xl p-2 transition-colors hover:bg-[#1e3a5f]/8 ${
+                settingsOpen ? "text-[#1e3a5f]" : "text-[#4d688a] hover:text-[#1e3a5f]"
+              }`}
+            >
+              <Settings size={20} />
+            </button>
           </div>
         </div>
 
@@ -428,6 +444,13 @@ export default function Chat() {
           </div>
         </div>
       </div>
+
+      <ModelSettings
+        open={settingsOpen}
+        settings={modelSettings}
+        onChange={setModelSettings}
+        onClose={() => setSettingsOpen(false)}
+      />
     </div>
   );
 }
